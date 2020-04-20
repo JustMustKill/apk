@@ -1,0 +1,118 @@
+#include <dos.h>
+
+typedef void interrupt(*Interrupt) (...);
+
+Interrupt MASTER_OLD[8];
+Interrupt SLAVE_OLD[8];
+
+int VIDEO_ATTR = 0x5E;
+int LINE_SIZE = 80;
+
+struct Video {
+	unsigned char ch;
+	unsigned char attr;
+};
+
+Video far* print(Video far* ptr, int value) {
+	for (int i = 0; i < 8; ++i) {
+		ptr->ch = (value & 1) + '0';
+		value >>= 1;
+		ptr->attr = VIDEO_ATTR;
+		++ptr;
+	}
+	return ptr;
+}
+
+void print_registers() {
+	Video far* begin = (Video far *)MK_FP(0xB800, 0) + LINE_SIZE * 12 + 25;
+	Video far* ptr = begin;
+
+	ptr = print(ptr, inp(0x21)) + 1; 	//master mask
+
+	outp(0x20, 0x0A);
+	ptr = print(ptr, inp(0x20)) + 1; 	//master request
+
+	outp(0x20, 0x0B);
+	ptr = print(ptr, inp(0x20)); 		//master served
+
+	int rest = LINE_SIZE - (int)(ptr - begin) % LINE_SIZE;
+	ptr += rest;
+
+	ptr = print(ptr, inp(0xA1)) + 1; 	//slave mask
+
+	outp(0xA0, 0x0A);
+	ptr = print(ptr, inp(0xA0)) + 1;	//slave request
+
+	outp(0xA0, 0x0B);
+	print(ptr, inp(0xA0)); 				//slave served
+}
+
+int calc_index(int served) {
+	int index = 0;
+	while (served > 1) {
+		++index;
+		served >>= 1;
+	}
+	return index;
+}
+
+void interrupt new_interrupt(...) {
+	print_registers();
+
+	outp(0x20, 0x0B);
+	int masterServed = inp(0x20);
+
+	outp(0xA0, 0x0B);
+	int slaveServed = inp(0xA0);
+
+	if (masterServed >= 1) {
+		int index = calc_index(masterServed);
+		if (index == 1) { //keyboard
+			VIDEO_ATTR = (VIDEO_ATTR + 1) % 256;
+		}
+		MASTER_OLD[index]();
+	}
+	else if (slaveServed >= 1) {
+		SLAVE_OLD[calc_index(slaveServed)]();
+	}
+
+}
+
+void init_controller() {
+	int master_base = 0x08;
+	int slave_base = 0x70;
+	for (int i = 0; i < 8; ++i) {
+		MASTER_OLD[i] = getvect(master_base + i);
+		SLAVE_OLD[i] = getvect(slave_base + i);
+	}
+
+	master_base = 0xA8; //my new base vectors
+	slave_base = 0x08;
+	for (i = 0; i < 8; ++i) {
+		setvect(master_base + i, new_interrupt);
+		setvect(slave_base + i, new_interrupt);
+	}
+
+	_disable();
+	outp(0x20, 0x11); //ICW1
+	outp(0x21, master_base); //ICW2
+	outp(0x21, 0x04); //ICW3
+	outp(0x21, 0x01); //ICW4
+
+	outp(0xA0, 0x11); //ICW1
+	outp(0xA1, slave_base); //ICW2
+	outp(0xA1, 0x02); //ICW3
+	outp(0xA1, 0x01); //ICW4
+	_enable();
+}
+
+int main() {
+	init_controller();
+
+	unsigned far* fp;
+	FP_SEG(fp) = _psp;
+	FP_OFF(fp) = 0x2c;
+	_dos_freemem(*fp);
+	_dos_keep(0, (_DS - _CS) + (_SP / 16) + 1);
+	return 0;
+}
