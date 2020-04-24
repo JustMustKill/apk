@@ -3,51 +3,46 @@
 #include <stdlib.h>
 #include <conio.h>
 
-#define base  1193180 //âíóòðåííÿÿ ÷àñòîòà òàéìåðà
+#define base  1193180
 #define SHORT_MAX  65535
 
 enum NOTE
 {
 	c = 261,
-	d = 294,
+	cS = 277,
+	d = 293,
+	dS = 311,
 	e = 329,
 	f = 349,
-	g = 391,
+	fS = 370,
+	g = 392,
 	gS = 415,
 	a = 440,
 	aS = 455,
-	b = 466,
-	cH = 523,
-	cSH = 554,
-	dH = 587,
-	dSH = 622,
-	eH = 659,
-	fH = 698,
-	fSH = 740,
-	gH = 784,
-	gSH = 830,
-	aH = 880
-
+	b = 493,
+	bl = 246,
+	flS = 185,
+	fHS = 740,
 };
 
 void printByte(char byte);
 
 void printChanelStatus(char chanel) {
-	char controlByte = 0xE0;		//11_1_0_000_0
+	char controlByte = 0xE0;
 	char chanelPort = 0x40;
 	switch (chanel) {
 	case 0: {
-		controlByte = 0xE2;		//11_1_0_001_0 êàíàë 0, áèò 4 ïîçâîëÿåò ïîëó÷èòü ñîñòîÿíèå ïðè 0, áèò 5 ïðè 0 ôèêñèðóåò ñ÷åò÷èê, áèòû 6 è 7 â 1 - ÷òåíèå 
+		controlByte = 0xE2;		
 		chanelPort = 0x40;
 		break;
 	}
 	case 1: {
-		controlByte = 0xE4;		//11_1_0_010_0 êàíàë 1, áèò 4 ïîçâîëÿåò ïîëó÷èòü ñîñòîÿíèå ïðè 0, áèò 5 ïðè 0 ôèêñèðóåò ñ÷åò÷èê, áèòû 6 è 7 â 1 - ÷òåíèå 
+		controlByte = 0xE4;		
 		chanelPort = 0x41;
 		break;
 	}
 	case 2: {
-		controlByte = 0xE8;		//11_1_0_100_0 êàíàë 2, áèò 4 ïîçâîëÿåò ïîëó÷èòü ñîñòîÿíèå ïðè 0, áèò 5 ïðè 0 ôèêñèðóåò ñ÷åò÷èê, áèòû 6 è 7 â 1 - ÷òåíèå 
+		controlByte = 0xE8;		
 		chanelPort = 0x42;
 		break;
 	}
@@ -80,17 +75,17 @@ void printChanelKD(short chanel) {
 	char chanelPort;
 	switch (chanel) {
 	case 0: {
-		controlByte = 0xD0;		//11_0_1_001_0  êàíàë 0,
+		controlByte = 0xD0;		
 		chanelPort = 0x40;
 		break;
 	}
 	case 1: {
-		controlByte = 0xD0;		//01_00_000_0 | 11_0_1_010_0 êàíàë 1,
+		controlByte = 0xD0;		
 		chanelPort = 0x41;
 		break;
 	}
 	case 2: {
-		controlByte = 0xD0;		//10_00_000_0	| 11_0_1_100_0 êàíàë 2,
+		controlByte = 0xD0;	
 		chanelPort = 0x42;
 		break;
 	}
@@ -122,7 +117,7 @@ void random(long maxNumber)
 	long prevState = inp(0x61);
 	outp(0x61, inp(0x61) & 0xFC | 0x01);	// disable dynamic, enable tick
 
-	outp(0x43, 0xB4); // 10_11_010_0 ãåíåðàòîð èìïóëüñîâ, ÷òåíèå/çàïèñü ìëàäøåãî, à çà íèì ñòàðøåãî áàéòà, âûáîð òðåòüåãî êàíàëà 
+	outp(0x43, 0xB4); 
 	outp(0x42, maxNumber % 256);	// low byte
 	outp(0x42, maxNumber / 256);	// high byte	
 
@@ -140,7 +135,7 @@ void random(long maxNumber)
 
 void playSound(int note, int duration) {
 	int kd;
-	outp(0x43, 0xB6);//10_11_011_0 - âûáîð òðåòüåãî êàíàëà, ÷òåíèå/çàïèñü ìëàäøåãî, à çà íèì ñòàðøåãî áàéòà, ãåíåðàòîð ïðÿìîóãîëüíûõ èìïóëüñîâ
+	outp(0x43, 0xB6);
 
 	kd = base / note;
 
@@ -158,93 +153,148 @@ void playSound(int note, int duration) {
 
 void doRock()
 {
-	playSound(a, 500);
-	playSound(a, 500);
-	playSound(a, 500);
-	playSound(f, 350);
-	playSound(cH, 150);
+	//Rammstein - Mutter
+	playSound(e, 370);
+	playSound(bl, 370);
+	playSound(e, 370);
+	playSound(g, 370);
+	playSound(b, 370);
+	playSound(g, 370);
+	playSound(e, 370);
+	playSound(bl, 250);
+	playSound(a, 250);
 
-	playSound(a, 500);
-	playSound(f, 350);
-	playSound(cH, 150);
-	playSound(a, 1000);
-	//first bit
+	playSound(bl, 270);
+	playSound(flS, 270);
+	playSound(bl, 270);
+	playSound(dS, 270);
+	playSound(fS, 270);
+	playSound(b, 270);
+	playSound(fS, 270);
+	playSound(dS, 270);
 
-	playSound(eH, 500);
-	playSound(eH, 500);
-	playSound(eH, 500);
-	playSound(fH, 350);
-	playSound(cH, 150);
+	playSound(bl, 270);
+	playSound(flS, 270);
+	playSound(bl, 270);
+	playSound(dS, 270);
+	playSound(fS, 270);
+	playSound(b, 270);
+	playSound(fS, 270);
+	playSound(dS, 270);
 
-	playSound(gS, 500);
-	playSound(f, 350);
-	playSound(cH, 150);
-	playSound(a, 1000);
-	//second bit...
+	playSound(e, 250);
+	playSound(e, 250);
+	playSound(e, 250);
+	playSound(e, 400); 
+	playSound(e, 400);
+	playSound(g, 400);
+	playSound(g, 400);
+	playSound(g, 400);
+	playSound(fS, 500);
 
-	playSound(aH, 500);
-	playSound(a, 350);
-	playSound(a, 150);
-	playSound(aH, 500);
-	playSound(gSH, 250);
-	playSound(gH, 250);
+	playSound(fS, 250);
+	playSound(fS, 250);
+	playSound(fS, 250);
+	playSound(fS, 400);
+	playSound(fS, 400);
+	playSound(g, 400);
+	playSound(fS, 250);
+	playSound(g, 400);
+	playSound(fS, 500);
 
-	playSound(fSH, 125);
-	playSound(fH, 125);
-	playSound(fSH, 250);
-	delay(250);
-	playSound(aS, 250);
-	playSound(dSH, 500);
-	playSound(dH, 250);
-	playSound(cSH, 250);
-	//start of the interesting bit
+	playSound(e, 250);
+	playSound(e, 250);
+	playSound(e, 250);
+	playSound(e, 400);
+	playSound(e, 400);
+	playSound(c, 400);
+	playSound(c, 400);
+	playSound(d, 400);
+	playSound(c, 500);
 
-	playSound(cH, 125);
-	playSound(b, 125);
-	playSound(cH, 250);
-	delay(250);
-	playSound(f, 125);
-	playSound(gS, 500);
-	playSound(f, 375);
-	playSound(a, 125);
+	playSound(fS, 250);
+	playSound(fS, 250);
+	playSound(fS, 250);
+	playSound(fS, 350);
+	playSound(fS, 350);
+	playSound(g, 370);
+	playSound(fS, 300);
+	playSound(g, 370);
+	playSound(fS, 500);
 
-	playSound(cH, 500);
-	playSound(a, 375);
-	playSound(cH, 125);
-	playSound(eH, 1000);
-	//more interesting stuff (this doesn't quite get it right somehow)
+	playSound(e, 250);
+	playSound(e, 250);
+	playSound(e, 250);
+	playSound(e, 400);
+	playSound(e, 400);
+	playSound(g, 400);
+	playSound(g, 400);
+	playSound(g, 400);
+	playSound(fS, 500);
 
-	playSound(aH, 500);
-	playSound(a, 350);
-	playSound(a, 150);
-	playSound(aH, 500);
-	playSound(gSH, 250);
-	playSound(gH, 250);
+	playSound(fS, 250);
+	playSound(fS, 250);
+	playSound(fS, 250);
+	playSound(fS, 400);
+	playSound(fS, 400);
+	playSound(g, 400);
+	playSound(fS, 250);
+	playSound(g, 400);
+	playSound(fS, 500);
 
-	playSound(fSH, 125);
-	playSound(fH, 125);
-	playSound(fSH, 250);
-	delay(250);
-	playSound(aS, 250);
-	playSound(dSH, 500);
-	playSound(dH, 250);
-	playSound(cSH, 250);
-	//repeat... repeat
+	playSound(e, 250);
+	playSound(e, 250);
+	playSound(e, 250);
+	playSound(e, 400);
+	playSound(e, 400);
+	playSound(c, 400);
+	playSound(c, 400);
+	playSound(d, 400);
+	playSound(c, 500);
 
-	playSound(cH, 125);
-	playSound(b, 125);
-	playSound(cH, 250);
-	delay(250);
-	playSound(f, 250);
-	playSound(gS, 500);
-	playSound(f, 375);
-	playSound(cH, 125);
+	playSound(fS, 250);
+	playSound(fS, 250);
+	playSound(fS, 250);
+	playSound(fS, 350);
+	playSound(fS, 350);
+	playSound(g, 370);
+	playSound(fS, 300);
+	playSound(g, 370);
+	playSound(fS, 500);
 
-	playSound(a, 500);
-	playSound(f, 375);
-	playSound(c, 125);
-	playSound(a, 1000);
+	playSound(dS, 250);
+	playSound(e, 800);
 
+	playSound(fS, 250);
+	playSound(g, 250);
+	playSound(b, 800);
+
+	playSound(b, 250);
+	playSound(a, 250);
+	playSound(b, 250);
+	playSound(a, 250);
+	playSound(fS, 700);
+
+	playSound(fS, 400);
+	playSound(g, 400);
+	playSound(fS, 400);
+	playSound(dS, 250);
+	playSound(e, 800);
+
+	playSound(fS, 250);
+	playSound(g, 250);
+	playSound(b, 800);
+
+	playSound(b, 250);
+	playSound(a, 250);
+	playSound(b, 250);
+	playSound(a, 250);
+	playSound(fS, 700);
+
+	playSound(fS, 400);
+	playSound(g, 400);
+	playSound(fS, 400);
+	playSound(e, 600);
 }
 
 int main() {
