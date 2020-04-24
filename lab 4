@@ -310,7 +310,7 @@ void doRock()
 
 
 
-	//
+	//The Imperial March
 	playSound(al, 500);
 	playSound(al, 500);
 	playSound(al, 500);
